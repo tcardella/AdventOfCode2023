@@ -2,6 +2,9 @@
 
 namespace UnitTests;
 
+/// <summary>
+/// Prompt: https://adventofcode.com/2023/day/2
+/// </summary>
 public class Day02
 {
     [Theory]

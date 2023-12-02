@@ -2,6 +2,9 @@ using FluentAssertions;
 
 namespace UnitTests;
 
+/// <summary>
+/// Prompt: https://adventofcode.com/2023/day/1
+/// </summary>
 public class Day01
 {
     private readonly List<string> _digitTokens;
