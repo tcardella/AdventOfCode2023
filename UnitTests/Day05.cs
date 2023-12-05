@@ -150,7 +150,7 @@ public class Day05
 
     [Theory]
     [InlineData("Input/05/example.txt", 46)]
-    [InlineData("Input/05/input.txt", 5747443)]
+    [InlineData("Input/05/input.txt", 63179500)]
     public async Task Part2(string inputFilePath, int expected)
     {
         var inputs = await File.ReadAllLinesAsync(inputFilePath);
