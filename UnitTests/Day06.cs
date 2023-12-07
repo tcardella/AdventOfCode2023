@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using Xunit.Abstractions;
 
 namespace UnitTests;
 
@@ -8,13 +7,6 @@ namespace UnitTests;
 /// </summary>
 public class Day06
 {
-    private readonly ITestOutputHelper _testOutputHelper;
-
-    public Day06(ITestOutputHelper testOutputHelper)
-    {
-        _testOutputHelper = testOutputHelper;
-    }
-
     [Theory]
     [InlineData("Input/06/example.txt", 288)]
     [InlineData("Input/06/input.txt", 131376)]
@@ -22,29 +14,26 @@ public class Day06
     {
         var inputs = await File.ReadAllLinesAsync(inputFilePath);
 
-        var x = inputs.Select(e => e.Split(':')
+        var raceInputs = inputs.Select(e => e.Split(':')
                 .Last()
                 .Split(' ')
-                .Where(e => !string.IsNullOrWhiteSpace(e))
+                .Where(f => !string.IsNullOrWhiteSpace(f))
                 .Select(int.Parse))
             .ToArray();
 
-        var a = x[0].Zip(x[1]).Select(e => new { Time = e.First, Distance = e.Second }).ToArray();
+        var races = raceInputs[0].Zip(raceInputs[1]).Select(e => new { Time = e.First, Distance = e.Second }).ToArray();
 
         var counts = new List<int>();
 
-        for (var i = 0; i < a.Count(); i++)
+        for (var i = 0; i < races.Count(); i++)
         {
             var count = 0;
 
-            for (var j = 0; j < a[i].Time; j++)
+            for (var j = 0; j < races[i].Time; j++)
             {
-                var time2Move = a[i].Time - j;
-                var speed = 1 * j;
+                var distance = (races[i].Time - j) * j;
 
-                var d = time2Move * speed;
-
-                if (d > a[i].Distance)
+                if (distance > races[i].Distance)
                     count++;
             }
 
@@ -61,30 +50,24 @@ public class Day06
     {
         var inputs = await File.ReadAllLinesAsync(inputFilePath);
 
-        var x = inputs.Select(e => e.Split(':')
+        var raceInputs = inputs.Select(e => e.Split(':')
                 .Last()
                 .Replace(" ", string.Empty))
-            .Select(long.Parse);
+            .Select(long.Parse)
+            .ToArray();
 
-        var a = new { Time = x.First(), Distance = x.Last() };
-
-        var counts = new List<int>();
+        var race = new { Time = raceInputs.First(), Distance = raceInputs.Last() };
 
         var count = 0;
 
-        for (var i = 0; i < a.Time; i++)
+        for (var i = 0; i < race.Time; i++)
         {
-            var time2Move = a.Time - i;
-            var speed = 1 * i;
+            var distance = (race.Time - i) * i;
 
-            var d = time2Move * speed;
-
-            if (d > a.Distance)
+            if (distance > race.Distance)
                 count++;
         }
 
-        counts.Add(count);
-
-        counts.Aggregate((a, b) => a * b).Should().Be(expected);
+        count.Should().Be(expected);
     }
 }
