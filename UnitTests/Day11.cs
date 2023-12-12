@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using FluentAssertions;
+﻿using FluentAssertions;
 
 namespace UnitTests;
 
@@ -14,121 +13,30 @@ public class Day11
     public async Task Part1(string inputFilePath, int expected)
     {
         var inputs = await File.ReadAllLinesAsync(inputFilePath);
-        
+
         var universe = BuildUniverse(inputs);
-        var galaxies = ParseGalaxies(universe).Select(g=> new GalaxyOffsets(g,0,0)).ToArray();
+        var galaxies = ParseGalaxies(universe).Select(g => new GalaxyOffsets(g, 0, 0)).ToArray();
 
-        Dump(galaxies);
-        
-        var expandingRowIndexes = GetExpandingRowIndexes(universe);
-        for (int i = 0; i < expandingRowIndexes.Count; i++)
-        {
-            var temp = galaxies.Where(e => e.Point.Y > expandingRowIndexes[i]);
-            foreach (var t in temp)
-            {
-                t.OffsetY += 1;
-            }
-        }
+        foreach (var t in GetExpandingRowIndexes(universe).Select(r => galaxies.Where(e => e.Point.Y > r))
+                     .SelectMany(e => e)) t.OffsetY += 1;
 
-        var expandingColumnIndexes = GetExpandingColumnIndexes(universe);
+        foreach (var t in GetExpandingColumnIndexes(universe).Select(c => galaxies.Where(e => e.Point.X > c))
+                     .SelectMany(e => e)) t.OffsetX += 1;
 
-        for (int i = 0; i < expandingColumnIndexes.Count; i++)
-        {
-            var temp = galaxies.Where(e => e.Point.X > expandingColumnIndexes[i]);
-            foreach (var t in temp)
-            {
-                t.OffsetX += 1;
-            }
-        }
+        var expandedGalaxies = galaxies.Select(e => new Point(e.Point.X + e.OffsetX, e.Point.Y + e.OffsetY)).ToArray();
 
-        Dump(galaxies);
-        
-        var newGalaxies = galaxies.Select(e => new Point(e.Point.X + e.OffsetX, e.Point.Y + e.OffsetY)).ToArray();
-
-        //universe = ExpandUniverse(universe, 1);
-        
-        var pairs = GetPairs(newGalaxies);
-
-        var sum = pairs.Sum(pair => Math.Abs(pair.Item1.X - pair.Item2.X) + Math.Abs(pair.Item1.Y - pair.Item2.Y));
+        var sum = GetPairs(expandedGalaxies)
+            .Sum(pair => Math.Abs(pair.Item1.X - pair.Item2.X) + Math.Abs(pair.Item1.Y - pair.Item2.Y));
 
         sum.Should().Be(expected);
     }
 
-    private void Dump(GalaxyOffsets[] galaxies)
-    {
-        foreach (var galaxy in galaxies)
-        {
-            Console.WriteLine($"{galaxy.Point}: {galaxy.OffsetX}   {galaxy.OffsetY}");
-        }
-        
-        Console.WriteLine();
-    }
-
-    public class GalaxyOffsets(Point point, long offsetX, long offsetY)
-    {
-        public Point Point { get; } = point;
-        public long OffsetX { get; set; } = offsetX;
-        public long OffsetY { get;set; } = offsetY;
-    }
-
     private IEnumerable<Point> ParseGalaxies(List<List<char>> universe)
     {
-        for (int i = 0; i < universe.Count; i++)
-        {
-            for (int j = 0; j < universe[0].Count; j++)
-            {
-                if (universe[i][j] == '#')
-                    yield return new Point(j, i);
-            }
-        }
-    }
-    
-    private static List<(Point, Point)> GetGalaxyPairs(List<List<char>> universe)
-    {
-        var galaxies = new List<Point>();
-
         for (var i = 0; i < universe.Count; i++)
         for (var j = 0; j < universe[0].Count; j++)
             if (universe[i][j] == '#')
-                galaxies.Add(new Point(j, i));
-
-        //galaxies.Should().HaveCount(9);
-
-        var pairs = GetPairs(galaxies.ToArray());
-        //pairs.Should().HaveCount(36);
-        return pairs;
-    }
-
-    private List<List<char>> ExpandUniverse(List<List<char>> universe, int expansion = 1)
-    {
-        var expandingRowIndexes = GetExpandingRowIndexes(universe);
-        var expandingColumnIndexes = GetExpandingColumnIndexes(universe);
-
-        var emptyRow = Enumerable.Range(0, universe[0].Count).Select(_ => '.').ToList();
-        var emptyRows = Enumerable.Range(0, expansion).Select(_ => emptyRow).ToArray();
-        
-        for (var i = expandingRowIndexes.Count - 1; i >= 0; i--)
-        {
-            for (int j = 0; j < expansion; j++)
-            {
-                var row = expandingRowIndexes[i];
-                universe.InsertRange(row, emptyRows);
-            }
-        }
-
-        var emptyColumns = Enumerable.Range(0, expansion).Select(_ => '.').ToArray();
-
-        for (var i = expandingColumnIndexes.Count - 1; i >= 0; i--)
-        {
-            var column = expandingColumnIndexes[i];
-
-            for (var j = 0; j < universe.Count; j++)
-            {
-                universe[j].InsertRange(column, emptyColumns);
-            }
-        }
-
-        return universe;
+                yield return new Point(j, i);
     }
 
     private static List<int> GetExpandingColumnIndexes(List<List<char>> universe)
@@ -139,8 +47,8 @@ public class Day11
         {
             var canAdd = true;
 
-            for (var row = 0; row < universe.Count; row++)
-                if (universe[row][column] != '.')
+            foreach (var row in universe)
+                if (row[column] != '.')
                     canAdd = false;
 
             if (canAdd)
@@ -170,32 +78,16 @@ public class Day11
 
     private static List<List<char>> BuildUniverse(string[] inputs)
     {
-        var universe = new List<List<char>>();
-
-
-        foreach (var input in inputs) universe.Add(input.Select(e => e).ToList());
-        return universe;
+        return inputs.Select(input => input.Select(e => e).ToList()).ToList();
     }
 
-    public static List<(Point, Point)> GetPairs(Point[] inputs)
+    private static List<(Point, Point)> GetPairs(Point[] inputs)
     {
         var pairs = new List<(Point, Point)>();
         for (var i = 0; i < inputs.Length; i++)
         for (var j = i + 1; j < inputs.Length; j++)
             pairs.Add((inputs[i], inputs[j]));
         return pairs;
-    }
-
-    public void Dump(List<List<char>> universe)
-    {
-        for (var i = 0; i < universe.Count; i++)
-        {
-            for (var j = 0; j < universe[0].Count; j++) Console.Write(universe[i][j]);
-
-            Console.WriteLine();
-        }
-
-        Console.WriteLine();
     }
 
     [Theory]
@@ -210,41 +102,27 @@ public class Day11
         var universe = BuildUniverse(inputs);
         var galaxies = ParseGalaxies(universe).Select(g => new GalaxyOffsets(g, 0, 0)).ToArray();
 
-        Dump(galaxies);
+        foreach (var t in GetExpandingRowIndexes(universe).Select(r => galaxies.Where(e => e.Point.Y > r))
+                     .SelectMany(e => e)) t.OffsetY += expansion - 1;
 
-        var expandingRowIndexes = GetExpandingRowIndexes(universe);
-        for (int i = 0; i < expandingRowIndexes.Count; i++)
-        {
-            var temp = galaxies.Where(e => e.Point.Y > expandingRowIndexes[i]);
-            foreach (var t in temp)
-            {
-                t.OffsetY += expansion-1;
-            }
-        }
-
-        var expandingColumnIndexes = GetExpandingColumnIndexes(universe);
-
-        for (int i = 0; i < expandingColumnIndexes.Count; i++)
-        {
-            var temp = galaxies.Where(e => e.Point.X > expandingColumnIndexes[i]);
-            foreach (var t in temp)
-            {
-                t.OffsetX += expansion-1;
-            }
-        }
-
-        Dump(galaxies);
+        foreach (var t in GetExpandingColumnIndexes(universe).Select(c => galaxies.Where(e => e.Point.X > c))
+                     .SelectMany(e => e)) t.OffsetX += expansion - 1;
 
         var newGalaxies = galaxies.Select(e => new Point(e.Point.X + e.OffsetX, e.Point.Y + e.OffsetY)).ToArray();
 
-        //universe = ExpandUniverse(universe, 1);
-
         var pairs = GetPairs(newGalaxies);
 
-        long sum = pairs.Sum(pair => Math.Abs(pair.Item1.X - pair.Item2.X) + Math.Abs(pair.Item1.Y - pair.Item2.Y));
+        var sum = pairs.Sum(pair => Math.Abs(pair.Item1.X - pair.Item2.X) + Math.Abs(pair.Item1.Y - pair.Item2.Y));
 
         sum.Should().Be(expected);
     }
 
-    public record Point(long X, long Y);
+    private class GalaxyOffsets(Point point, long offsetX, long offsetY)
+    {
+        public Point Point { get; } = point;
+        public long OffsetX { get; set; } = offsetX;
+        public long OffsetY { get; set; } = offsetY;
+    }
+
+    private record Point(long X, long Y);
 }
