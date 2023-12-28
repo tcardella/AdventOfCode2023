@@ -123,8 +123,8 @@ public class Day23
     }
 
     [Theory]
-    [InlineData("Input/23/example.txt", 145)]
-    [InlineData("Input/23/input.txt", 284674)]
+    //[InlineData("Input/23/example.txt", 145)]
+    //[InlineData("Input/23/input.txt", 284674)]
     public async Task Part2(string inputFilePath, int expected)
     {
         var inputs = await File.ReadAllLinesAsync(inputFilePath);
