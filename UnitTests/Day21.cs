@@ -65,10 +65,37 @@ public class Day21
     }
 
     [Theory]
-    [InlineData("Input/21/example.txt", 0)]
-    [InlineData("Input/21/input.txt", 0)]
-    public async Task Part2(string inputFilePath, int expected)
+    [InlineData("Input/21/example.txt",6, 16)]
+    [InlineData("Input/21/example.txt", 10, 50)]
+    [InlineData("Input/21/example.txt", 50, 1594)]
+    [InlineData("Input/21/example.txt", 100, 6536)]
+    [InlineData("Input/21/example.txt", 500, 167004)]
+    [InlineData("Input/21/example.txt", 1000, 668697)]
+    [InlineData("Input/21/example.txt", 5000, 16733044)]
+    [InlineData("Input/21/input.txt",0, 0)]
+    public async Task Part2(string inputFilePath, int steps, int expected)
     {
         var inputs = await File.ReadAllLinesAsync(inputFilePath);
+
+        var map = inputs.Select(e => e.ToCharArray()).ToArray();
+
+        var start = GetStart(map);
+
+        var directions = new[] { new Vector2(0, 1), new Vector2(0, -1), new Vector2(1, 0), new Vector2(-1, 0) };
+
+        var lastBatch = new List<Point>() { start };
+        var currentBatch = new List<Point>() { };
+
+        foreach (var step in Enumerable.Range(0, steps))
+        {
+            currentBatch = lastBatch.SelectMany(e => directions, (e, d) => e.Add(d))
+                .Where(e => map[e.Y][e.X] != '#')
+                .Distinct()
+                .ToList();
+
+            lastBatch = currentBatch;
+        }
+
+        lastBatch.Count().Should().Be(expected);
     }
 }
